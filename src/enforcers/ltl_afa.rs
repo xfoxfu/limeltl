@@ -28,18 +28,13 @@ impl LTLSubtreeEnforcer {
             .clone()
             .map(|j| {
                 PropExpr::chained_and(
-                    std::iter::once(PropExpr::var(f(i, j), false))
-                        .chain(
-                            range
-                                .clone()
-                                .filter(|v| *v != j)
-                                .map(|k| PropExpr::var(f(i, k), true)),
-                        )
+                    std::iter::once(f(i, j).into())
+                        .chain(range.clone().filter(|v| *v != j).map(|k| !f(i, k)))
                         .collect(),
                 )
             })
             .collect();
-        PropExpr::biconditional(PropExpr::var(self.0, false), PropExpr::chained_or(vars))
+        PropExpr::biconditional(self.0.into(), PropExpr::chained_or(vars))
     }
 }
 

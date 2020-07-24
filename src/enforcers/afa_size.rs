@@ -24,7 +24,7 @@ impl Enforcer for LTLSizeEnforcer {
                     Variable::Release,
                 ])
                     .into_iter()
-                    .map(move |f| PropExpr::var(f(i.clone()), true))
+                    .map(move |f| !f(i.clone()))
             })
             .chain(((self.0 - 1)..=self.0).flat_map(|i| {
                 (&[
@@ -34,7 +34,7 @@ impl Enforcer for LTLSizeEnforcer {
                     Variable::Always,
                 ])
                     .into_iter()
-                    .map(move |f| PropExpr::var(f(i.clone()), true))
+                    .map(move |f| !f(i.clone()))
             }))
             .collect()
     }

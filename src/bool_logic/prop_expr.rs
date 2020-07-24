@@ -8,8 +8,8 @@ pub enum PropExpr {
     Binary(Box<PropExpr>, BinaryOp, Box<PropExpr>),
     /// chained binary expression
     ChainedBinary(BinaryOp, Vec<PropExpr>),
-    /// boolean variable, and whether inverted
-    Variable(Variable, bool),
+    /// boolean variable
+    Variable(Variable),
 }
 
 impl PropExpr {
@@ -32,8 +32,8 @@ impl PropExpr {
     pub fn biconditional(lhs: PropExpr, rhs: PropExpr) -> Self {
         PropExpr::Binary(Box::new(lhs), BinaryOp::BiConditional, Box::new(rhs))
     }
-    pub fn var(var: Variable, neg: bool) -> Self {
-        PropExpr::Variable(var, neg)
+    pub fn var(var: Variable) -> Self {
+        PropExpr::Variable(var)
     }
 
     pub fn chained_and(exprs: Vec<PropExpr>) -> Self {
@@ -72,7 +72,7 @@ pub enum BinaryOp {
 
 impl Into<PropExpr> for Variable {
     fn into(self) -> PropExpr {
-        PropExpr::var(self, false)
+        PropExpr::var(self)
     }
 }
 
@@ -105,7 +105,7 @@ impl PropExpr {
                 }
                 ret
             }
-            PropExpr::Variable(var, neg) => model.contains(var) ^ neg,
+            PropExpr::Variable(var) => model.contains(var),
         }
     }
 }
@@ -152,6 +152,6 @@ impl std::ops::Not for PropExpr {
 impl std::ops::Not for Variable {
     type Output = PropExpr;
     fn not(self) -> Self::Output {
-        PropExpr::var(self.into(), true)
+        PropExpr::not(self.into())
     }
 }

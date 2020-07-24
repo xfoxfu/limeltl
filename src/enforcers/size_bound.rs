@@ -21,16 +21,16 @@ impl Enforcer for SizeBoundEnforcer {
                     continue;
                 }
                 ret.push(PropExpr::or(
-                    PropExpr::var(Variable::LeftChild(i, self.0), true),
-                    PropExpr::var(Variable::LeftChild(j, self.0), true),
+                    !Variable::LeftChild(i, self.0),
+                    !Variable::LeftChild(j, self.0),
                 ));
                 ret.push(PropExpr::or(
-                    PropExpr::var(Variable::RightChild(i, self.0), true),
-                    PropExpr::var(Variable::RightChild(j, self.0), true),
+                    !Variable::RightChild(i, self.0),
+                    !Variable::RightChild(j, self.0),
                 ));
                 ret.push(PropExpr::or(
-                    PropExpr::var(Variable::LeftChild(i, self.0), true),
-                    PropExpr::var(Variable::RightChild(j, self.0), true),
+                    !Variable::LeftChild(i, self.0),
+                    !Variable::RightChild(j, self.0),
                 ));
             }
         }

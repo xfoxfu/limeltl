@@ -33,7 +33,7 @@ impl Enforcer for AFASkTypeEnforcer {
             // e.g. And & !Or & !Next & ...
             sub_routes.push(PropExpr::chained_and(
                 vars.iter()
-                    .map(|v| PropExpr::var(v.clone(), v != u))
+                    .map(|v| if v == u { v.clone().into() } else { !v.clone() })
                     .collect(),
             ));
         }
@@ -65,13 +65,10 @@ impl Enforcer for AFASpecificStructureEnforcer {
             .filter_map(|var| {
                 if ty.is_atom() {
                     // for atom skeleton, should not have no subtree
-                    Some(PropExpr::and(
-                        PropExpr::var(var.0, true),
-                        PropExpr::var(var.1, true),
-                    ))
+                    Some(PropExpr::and(!var.0, !var.1))
                 } else if ty.is_unary() {
                     // ty is unary, should not have right subtree
-                    Some(PropExpr::var(var.1, true))
+                    Some(!var.1)
                 } else {
                     // ty is binary, where both subtree is possible
                     unreachable!()
@@ -79,7 +76,7 @@ impl Enforcer for AFASpecificStructureEnforcer {
             })
             .collect();
         rules.push(PropExpr::biconditional(
-            PropExpr::var(self.0, false),
+            self.0.into(),
             PropExpr::chained_and(vars),
         ));
         rules

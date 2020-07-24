@@ -51,7 +51,7 @@ fn elim_not(val: PropExpr) -> PropExpr {
             PropExpr::Binary(_, _, _) => unreachable!(),
             PropExpr::ChainedBinary(_, _) => unreachable!(),
             // variable
-            PropExpr::Variable(var, neg) => PropExpr::Variable(var, !neg),
+            var @ PropExpr::Variable(_) => var,
         },
         // recursion case
         #[allow(unreachable_patterns)] // guard this case for safety
@@ -81,11 +81,11 @@ mod test {
             );
             assert_eq!(
                 elim_impl_eq(Variable::And(1) >> (Variable::And(2) | Variable::And(3)),),
-                !PropExpr::var(Variable::And(1), false) | (Variable::And(2) | Variable::And(3)),
+                !Variable::And(1) | (Variable::And(2) | Variable::And(3)),
             );
             assert_eq!(
                 elim_impl_eq(PropExpr::biconditional(
-                    PropExpr::var(Variable::And(1), false),
+                    Variable::And(1).into(),
                     Variable::And(2) | Variable::And(3),
                 )),
                 (Variable::And(1) & (Variable::And(2) | Variable::And(3)))
