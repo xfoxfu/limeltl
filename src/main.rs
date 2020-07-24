@@ -3,6 +3,7 @@
 mod bool_logic;
 mod context;
 mod enforcers;
+mod sat;
 mod utils;
 
 fn main() {

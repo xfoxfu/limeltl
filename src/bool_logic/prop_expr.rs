@@ -94,13 +94,13 @@ impl PropExpr {
                 let mut ret = match op {
                     BinaryOp::Conjunction => true,
                     BinaryOp::Disjunction => false,
-                    _ => unimplemented!(),
+                    _ => unreachable!(),
                 };
                 for expr in exprs.iter() {
                     match op {
                         BinaryOp::Conjunction => ret = ret && expr._validate(model),
                         BinaryOp::Disjunction => ret = ret || expr._validate(model),
-                        _ => unimplemented!(),
+                        _ => unreachable!(),
                     }
                 }
                 ret

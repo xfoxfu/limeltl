@@ -3,19 +3,20 @@ use crate::bool_logic::{PropExpr, Variable};
 use crate::context::Context;
 
 /// 避免节点重用
-pub struct SizeBoundEnforcer(usize, usize);
+pub struct SizeBoundEnforcer(usize);
 
 impl SizeBoundEnforcer {
-    fn new(child: usize, bound: usize) -> Self {
-        Self(child, bound)
+    fn new(child: usize) -> Self {
+        Self(child)
     }
 }
 
 impl Enforcer for SizeBoundEnforcer {
     fn rules(&self, ctx: &Context) -> Vec<PropExpr> {
+        let n = ctx.max_skeletons();
         let mut ret = vec![];
-        for i in 0..self.1 {
-            for j in 0..self.1 {
+        for i in 0..n {
+            for j in 0..n {
                 if i == j || i == self.0 || j == self.0 {
                     continue;
                 }
@@ -44,7 +45,7 @@ mod test {
     #[test]
     fn no_reuse() {
         let ctx = Context::new(4);
-        let rules = PropExpr::chained_and(SizeBoundEnforcer::new(2, 4).rules(&ctx));
+        let rules = PropExpr::chained_and(SizeBoundEnforcer::new(2).rules(&ctx));
         println!("{:?}", rules);
         assert!(!rules._validate(&vec![Variable::LeftChild(1, 2), Variable::LeftChild(3, 2)]));
         assert!(!rules._validate(&vec![Variable::LeftChild(1, 2), Variable::RightChild(3, 2)]));
