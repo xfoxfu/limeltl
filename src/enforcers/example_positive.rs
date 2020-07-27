@@ -3,6 +3,7 @@ use crate::bool_logic::{PropExpr, Variable};
 use crate::context::{Context, Example};
 
 fn make_rule<F: Fn() -> Variable>(
+    ctx: Context,
     ex: Example,
     ty: Variable,
     s1: usize,
@@ -77,12 +78,12 @@ fn make_rule<F: Fn() -> Variable>(
         }))
         .filter_map(|x| x)
         .collect(),
-        Variable::Literal(s) => (0..ex.context().var_count())
+        Variable::Literal(s) => (0..ctx.word_count())
             .map(|v| {
                 if !ex.contains(v) {
-                    Exactly(false) << (Run(e, t, s) & Literal(s) & LiteralValue(s, v))
+                    Exactly(false) << (Run(e, t, s) & Literal(s) & Word(s, v))
                 } else {
-                    Exactly(false) << (Run(e, t, s) & Literal(s) & !LiteralValue(s, v))
+                    Exactly(false) << (Run(e, t, s) & Literal(s) & !Word(s, v))
                 }
             })
             .collect(),

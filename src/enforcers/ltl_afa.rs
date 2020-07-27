@@ -4,7 +4,7 @@ use crate::context::Context;
 
 /// 保证 AFA 结构能够生成 LTL_f 公式，检查其存在符合要求的子树
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct LTLSubtreeEnforcer(Variable, usize, usize);
+pub struct LTLSubtreeEnforcer(Variable);
 
 impl LTLSubtreeEnforcer {
     /// 构造 LTL Enforcer
@@ -14,8 +14,8 @@ impl LTLSubtreeEnforcer {
     /// `n` - 总节点数
     ///
     /// `vars` - 样例中变量数量
-    pub fn new(ty: Variable, n: usize, vars: usize) -> Self {
-        Self(ty, n, vars)
+    pub fn new(ty: Variable) -> Self {
+        Self(ty)
     }
 
     fn subtree_rule<I, F>(&self, range: I, f: F) -> PropExpr
@@ -42,13 +42,15 @@ impl Enforcer for LTLSubtreeEnforcer {
     fn rules(&self, ctx: &Context) -> Vec<PropExpr> {
         let mut rules = Vec::new();
         let ty = &self.0;
+        let n = ctx.max_skeletons();
+        let word_cnt = ctx.word_count();
         // has left subtree
         if ty.is_unary() || ty.is_binary() {
-            rules.push(self.subtree_rule((self.0.skeleton_id() + 1)..self.1, Variable::LeftChild));
+            rules.push(self.subtree_rule((self.0.skeleton_id() + 1)..n, Variable::LeftChild));
         }
         // has right subtree
         if ty.is_binary() {
-            rules.push(self.subtree_rule((self.0.skeleton_id() + 1)..self.1, Variable::RightChild));
+            rules.push(self.subtree_rule((self.0.skeleton_id() + 1)..n, Variable::RightChild));
         }
         // is literal
         if ty.is_atom() {
@@ -58,7 +60,7 @@ impl Enforcer for LTLSubtreeEnforcer {
                 false
             });
 
-            rules.push(self.subtree_rule(0..self.2, Variable::LiteralValue));
+            rules.push(self.subtree_rule(0..word_cnt, Variable::Word));
         }
         rules
     }
@@ -70,10 +72,9 @@ mod test {
 
     #[test]
     fn has_left_subtree() {
-        let ctx = Context::new(4);
-        let rules = PropExpr::chained_and(
-            LTLSubtreeEnforcer::new(Variable::Eventually(2), 4, 2).rules(&ctx),
-        );
+        let ctx = Context::with_bound(4);
+        let rules =
+            PropExpr::chained_and(LTLSubtreeEnforcer::new(Variable::Eventually(2)).rules(&ctx));
         assert!(!rules._validate(&vec![Variable::Eventually(2)]));
         assert!(!rules._validate(&vec![Variable::Eventually(2), Variable::LeftChild(2, 1)]));
         assert!(rules._validate(&vec![Variable::Eventually(2), Variable::LeftChild(2, 3)]));

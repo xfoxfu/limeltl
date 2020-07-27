@@ -24,8 +24,8 @@ pub enum Variable {
     LeftChild(usize, usize),
     /// `.0` has right child `.1`
     RightChild(usize, usize),
-    /// Literal `.0` is variable `.1`
-    LiteralValue(usize, usize),
+    /// Literal `.0` is word `.1`
+    Word(usize, usize),
     /// Exactly `true` or `false`
     Exactly(bool),
 }

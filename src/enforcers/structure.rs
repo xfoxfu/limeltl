@@ -90,7 +90,7 @@ mod test {
 
     #[test]
     fn sk_type() {
-        let ctx = Context::new(6);
+        let ctx = Context::with_bound(6);
         let id = 5;
         let rule = AFASkTypeEnforcer::new(id)
             .rules(&ctx)
@@ -120,7 +120,7 @@ mod test {
 
     #[test]
     fn and() {
-        let ctx = Context::new(3);
+        let ctx = Context::with_bound(3);
         assert_eq!(
             AFASpecificStructureEnforcer::new(Variable::And(1))
                 .rules(&ctx)
@@ -132,7 +132,7 @@ mod test {
 
     #[test]
     fn next() {
-        let ctx = Context::new(3);
+        let ctx = Context::with_bound(3);
         let rule = AFASpecificStructureEnforcer::new(Variable::Next(1))
             .rules(&ctx)
             .pop()
@@ -154,7 +154,7 @@ mod test {
 
     #[test]
     fn lit() {
-        let ctx = Context::new(4);
+        let ctx = Context::with_bound(4);
         let rule = AFASpecificStructureEnforcer::new(Variable::Literal(1))
             .rules(&ctx)
             .pop()

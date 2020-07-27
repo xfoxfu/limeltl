@@ -7,5 +7,11 @@ mod sat;
 mod utils;
 
 fn main() {
-    println!("Hello world!")
+    let input =
+        serde_json::from_reader::<_, context::Input>(std::fs::File::open("input.json").unwrap())
+            .unwrap();
+    let ctx: context::Context = input.into();
+    for ex in ctx.examples() {
+        println!("{:?}", ex);
+    }
 }

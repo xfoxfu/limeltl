@@ -44,7 +44,7 @@ mod test {
 
     #[test]
     fn no_reuse() {
-        let ctx = Context::new(4);
+        let ctx = Context::with_bound(4);
         let rules = PropExpr::chained_and(SizeBoundEnforcer::new(2).rules(&ctx));
         println!("{:?}", rules);
         assert!(!rules._validate(&vec![Variable::LeftChild(1, 2), Variable::LeftChild(3, 2)]));

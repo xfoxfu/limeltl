@@ -27,11 +27,4 @@ pub use structure::AFASpecificStructureEnforcer;
 pub trait Enforcer {
     /// 生成规则
     fn rules(&self, ctx: &Context) -> Vec<PropExpr>;
-
-    /// 对给定上下文应用条件
-    fn apply(&self, ctx: &mut Context) {
-        for rule in self.rules(ctx).into_iter() {
-            ctx.apply_expr(rule)
-        }
-    }
 }
