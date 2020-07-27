@@ -26,18 +26,7 @@ impl Enforcer for AFASkTypeEnforcer {
             Variable::Always(id),
             Variable::Literal(id),
         ];
-        let mut sub_routes = vec![];
-        // for each possible u
-        for u in vars.iter() {
-            // create a chained_or where only u is not neg
-            // e.g. And & !Or & !Next & ...
-            sub_routes.push(PropExpr::chained_and(
-                vars.iter()
-                    .map(|v| if v == u { v.clone().into() } else { !v.clone() })
-                    .collect(),
-            ));
-        }
-        vec![PropExpr::chained_or(sub_routes)]
+        vec![super::one_of(vars.into_iter())]
     }
 }
 
@@ -56,22 +45,19 @@ impl Enforcer for AFASpecificStructureEnforcer {
     fn rules(&self, ctx: &Context) -> Vec<PropExpr> {
         let mut rules = Vec::new();
         let ty = &self.0;
-        if ty.is_binary() {
-            return rules;
-        }
         let vars: Vec<PropExpr> = (((self.0).skeleton_id() + 1)..ctx.max_skeletons())
             .map(|v| ((self.0).skeleton_id(), v))
             .map(|(l, r)| (Variable::LeftChild(l, r), Variable::RightChild(l, r)))
             .filter_map(|var| {
                 if ty.is_atom() {
-                    // for atom skeleton, should not have no subtree
+                    // 原子节点无子树
                     Some(PropExpr::and(!var.0, !var.1))
                 } else if ty.is_unary() {
-                    // ty is unary, should not have right subtree
+                    // 单目节点无右子树
                     Some(!var.1)
                 } else {
-                    // ty is binary, where both subtree is possible
-                    unreachable!()
+                    // 双目节点可以有子树
+                    None
                 }
             })
             .collect();

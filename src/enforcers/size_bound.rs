@@ -17,21 +17,22 @@ impl Enforcer for SizeBoundEnforcer {
         let mut ret = vec![];
         for i in 0..n {
             for j in 0..n {
-                if i == j || i == self.0 || j == self.0 {
-                    continue;
+                if i != j && i != self.0 && j != self.0 {
+                    ret.push(PropExpr::or(
+                        !Variable::LeftChild(i, self.0),
+                        !Variable::LeftChild(j, self.0),
+                    ));
+                    ret.push(PropExpr::or(
+                        !Variable::RightChild(i, self.0),
+                        !Variable::RightChild(j, self.0),
+                    ));
                 }
-                ret.push(PropExpr::or(
-                    !Variable::LeftChild(i, self.0),
-                    !Variable::LeftChild(j, self.0),
-                ));
-                ret.push(PropExpr::or(
-                    !Variable::RightChild(i, self.0),
-                    !Variable::RightChild(j, self.0),
-                ));
-                ret.push(PropExpr::or(
-                    !Variable::LeftChild(i, self.0),
-                    !Variable::RightChild(j, self.0),
-                ));
+                if i != self.0 && j != self.0 {
+                    ret.push(PropExpr::or(
+                        !Variable::LeftChild(i, self.0),
+                        !Variable::RightChild(j, self.0),
+                    ));
+                }
             }
         }
         ret
@@ -48,6 +49,7 @@ mod test {
         let rules = PropExpr::chained_and(SizeBoundEnforcer::new(2).rules(&ctx));
         println!("{:?}", rules);
         assert!(!rules._validate(&vec![Variable::LeftChild(1, 2), Variable::LeftChild(3, 2)]));
+        assert!(!rules._validate(&vec![Variable::LeftChild(1, 2), Variable::RightChild(1, 2)]));
         assert!(!rules._validate(&vec![Variable::LeftChild(1, 2), Variable::RightChild(3, 2)]));
         assert!(!rules._validate(&vec![
             Variable::RightChild(1, 2),

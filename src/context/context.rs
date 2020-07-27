@@ -53,6 +53,10 @@ impl Context {
     pub fn examples(&self) -> impl Iterator<Item = &Example> {
         self.examples.iter()
     }
+    /// 获得所有单词
+    pub fn words(&self) -> &HashMap<String, usize> {
+        &self.vocab
+    }
     /// 设置尺寸限制
     pub fn set_size_bound(&mut self, bound: usize) {
         self.max_skeletons = bound;

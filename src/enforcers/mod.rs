@@ -8,13 +8,12 @@
 //! 4. `LTLSubtreeEnforcer` 保证每个节点存在编号大于其自身的子树。
 //! 5. `LTLSizeEnforcer` 检查在 `N-2`（`N-1`）以后不存在二目（单目）子树，从而确保尺寸限制
 //! 6. `PositiveExampleEnforcer` 确保生成的结构接受正例
-//! 7. <del>`NegativeExampleEnforcer` 确保生成的结构拒绝反例</del>
+//! 7. `NegativeExampleEnforcer` 确保生成的结构拒绝反例
 
 use crate::{
     bool_logic::{BinaryOp, PropExpr, Variable},
     context::Context,
 };
-use rayon::prelude::*;
 
 mod afa_size;
 mod example_negative;
@@ -81,34 +80,35 @@ impl Enforcer for ContextEnforcer {
         let mut ret = vec![];
         // AFASkTypeEnforcer
         for i in 0..n {
-            ret.append(&mut AFASkTypeEnforcer::new(i).rules_cnf(ctx));
+            ret.append(&mut AFASkTypeEnforcer::new(i).rules(ctx));
         }
         // AFASpecificStructureEnforcer
         for i in 0..n {
             for ty in SK_TYPES {
-                ret.append(&mut AFASpecificStructureEnforcer::new(ty(i)).rules_cnf(ctx));
+                ret.append(&mut AFASpecificStructureEnforcer::new(ty(i)).rules(ctx));
             }
         }
         // SizeBoundEnforcer
         for i in 0..n {
-            ret.append(&mut SizeBoundEnforcer::new(i).rules_cnf(ctx));
+            ret.append(&mut SizeBoundEnforcer::new(i).rules(ctx));
         }
         // LTLSubtreeEnforcer
         for i in 0..n {
             for ty in SK_TYPES {
-                ret.append(&mut LTLSubtreeEnforcer::new(ty(i)).rules_cnf(ctx));
+                ret.append(&mut LTLSubtreeEnforcer::new(ty(i)).rules(ctx));
             }
         }
         // LTLSizeEnforcer
-        ret.append(&mut LTLSizeEnforcer::new().rules_cnf(ctx));
+        ret.append(&mut LTLSizeEnforcer::new().rules(ctx));
         // PositiveExampleEnforcer
-        for i in 0..n {
-            for ty in SK_TYPES {
-                for e in ctx.examples() {
+        // NegativeExampleEnforcer
+        for e in ctx.examples() {
+            for i in 0..n {
+                for ty in SK_TYPES {
                     if e.is_pos() {
-                        ret.append(&mut PositiveExampleEnforcer::new(ty(i), e).rules_cnf(ctx));
+                        ret.append(&mut PositiveExampleEnforcer::new(ty(i), e).rules(ctx));
                     } else {
-                        ret.append(&mut NegativeExampleEnforcer::new(ty(i), e).rules_cnf(ctx))
+                        ret.append(&mut NegativeExampleEnforcer::new(ty(i), e).rules(ctx))
                     }
                 }
             }

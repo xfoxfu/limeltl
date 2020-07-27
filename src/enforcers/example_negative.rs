@@ -11,11 +11,11 @@ fn make_rule(
     t: usize,
 ) -> Vec<PropExpr> {
     let e = ex.id();
-    let ex_size = ex.size() - 1;
+    let e_max_t = ex.size() - 1;
     use Variable::*;
     match ty {
         Variable::And(s) => {
-            if t == ex_size {
+            if t == e_max_t {
                 vec![]
             } else {
                 vec![
@@ -29,20 +29,20 @@ fn make_rule(
                 << (Run(e, t, s) & And(s) & LeftChild(s, s1) & RightChild(s, s2)),
         ],
         Variable::Next(s) => vec![
-            (if t < ex_size {
+            (if t < e_max_t {
                 Run(e, t + 1, s)
             } else {
                 Exactly(false)
             }) << (Run(e, t, s) & WNext(s) & LeftChild(s, s1)),
         ],
         Variable::WNext(s) => vec![
-            (if t < ex_size {
+            (if t < e_max_t {
                 Run(e, t + 1, s)
             } else {
                 Exactly(true)
             }) << (Run(e, t, s) & Next(s) & LeftChild(s, s1)),
         ],
-        Variable::Until(s) => vec![if t < ex_size {
+        Variable::Until(s) => vec![if t < e_max_t {
             (Run(e, t, s2) | (Run(e, t + 1, s) & Run(e, t, s1)))
                 << (Run(e, t, s) & Release(s) & LeftChild(s, s1) & RightChild(s, s2))
         } else {
@@ -51,9 +51,9 @@ fn make_rule(
         Variable::Release(s) => std::iter::once(Some(
             Run(e, t, s2) << (Run(e, t, s) & Until(s) & RightChild(s, s2)),
         ))
-        .chain(std::iter::once(if t < ex_size {
+        .chain(std::iter::once(if t < e_max_t {
             Some(
-                (Run(e, t, s2) | Run(e, t + 1, s))
+                (Run(e, t, s1) | Run(e, t + 1, s))
                     << (Run(e, t, s) & Until(s) & LeftChild(s, s1) & RightChild(s, s2)),
             )
         } else {
@@ -62,7 +62,7 @@ fn make_rule(
         .filter_map(|x| x)
         .collect(),
         Variable::Eventually(s) => vec![
-            (if t < ex_size {
+            (if t < e_max_t {
                 Run(e, t, s1) | Run(e, t + 1, s)
             } else {
                 Run(e, t, s1).into()
@@ -71,7 +71,7 @@ fn make_rule(
         Variable::Always(s) => std::iter::once(Some(
             Run(e, t, s1) << (Run(e, t, s) & Eventually(s) & LeftChild(s, s1)),
         ))
-        .chain(std::iter::once(if t < ex_size {
+        .chain(std::iter::once(if t < e_max_t {
             Some(Run(e, t + 1, s) << (Run(e, t, s) & Eventually(s) & LeftChild(s, s1)))
         } else {
             None

@@ -64,22 +64,6 @@ impl Enforcer for LTLSubtreeEnforcer {
             rules.push({
                 let range = 0..word_cnt;
                 let i = self.0.skeleton_id();
-                // let vars = range
-                //     .clone()
-                //     .map(|j| {
-                //         PropExpr::chained_and(([true, false]).iter().flat_map(|b| {
-                //             std::iter::once(Variable::Word(i, j, true).into())
-                //                 .chain(
-                //                     range
-                //                         .clone()
-                //                         .filter(|v| *v != j)
-                //                         .map(|k| !Variable::Word(i, k, true)),
-                //                 )
-                //                 .collect()
-                //         }))
-                //     })
-                //     .collect();
-
                 use itertools::Itertools;
 
                 self.0
