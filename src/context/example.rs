@@ -36,6 +36,10 @@ impl Example {
             .iter()
             .any(|s| s.contains(&Word::new_unchecked(v)))
     }
+    /// 确定在给定时间是否包含特定的变量
+    pub fn contains_at(&self, t: usize, v: usize) -> bool {
+        self.sequence[t].contains(&Word::new_unchecked(v))
+    }
 }
 
 impl PartialEq for Example {

@@ -43,9 +43,9 @@ impl PropExpr {
         PropExpr::ChainedBinary(BinaryOp::Conjunction, exprs)
     }
     pub fn chained_or(exprs: Vec<PropExpr>) -> Self {
-        if exprs.len() == 0 {
-            panic!("empty list of sub exprs");
-        }
+        // if exprs.len() == 0 {
+        //     panic!("empty list of sub exprs");
+        // }
         PropExpr::ChainedBinary(BinaryOp::Disjunction, exprs)
     }
 }

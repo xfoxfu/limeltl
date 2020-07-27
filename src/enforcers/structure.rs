@@ -59,7 +59,7 @@ impl Enforcer for AFASpecificStructureEnforcer {
         if ty.is_binary() {
             return rules;
         }
-        let vars = (((self.0).skeleton_id() + 1)..ctx.max_skeletons())
+        let vars: Vec<PropExpr> = (((self.0).skeleton_id() + 1)..ctx.max_skeletons())
             .map(|v| ((self.0).skeleton_id(), v))
             .map(|(l, r)| (Variable::LeftChild(l, r), Variable::RightChild(l, r)))
             .filter_map(|var| {
@@ -75,10 +75,12 @@ impl Enforcer for AFASpecificStructureEnforcer {
                 }
             })
             .collect();
-        rules.push(PropExpr::biconditional(
-            self.0.into(),
-            PropExpr::chained_and(vars),
-        ));
+        if vars.len() > 0 {
+            rules.push(PropExpr::biconditional(
+                self.0.into(),
+                PropExpr::chained_and(vars),
+            ));
+        }
         rules
     }
 }

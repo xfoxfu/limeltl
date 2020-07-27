@@ -53,4 +53,8 @@ impl Context {
     pub fn examples(&self) -> impl Iterator<Item = &Example> {
         self.examples.iter()
     }
+    /// 设置尺寸限制
+    pub fn set_size_bound(&mut self, bound: usize) {
+        self.max_skeletons = bound;
+    }
 }

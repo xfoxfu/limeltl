@@ -10,7 +10,10 @@
 //! 6. `PositiveExampleEnforcer` 确保生成的结构接受正例
 //! 7. <del>`NegativeExampleEnforcer` 确保生成的结构拒绝反例</del>
 
-use crate::{bool_logic::PropExpr, context::Context};
+use crate::{
+    bool_logic::{BinaryOp, PropExpr, Variable},
+    context::Context,
+};
 
 mod afa_size;
 mod example_positive;
@@ -19,6 +22,7 @@ mod size_bound;
 mod structure;
 
 pub use afa_size::LTLSizeEnforcer;
+use example_positive::PositiveExampleEnforcer;
 pub use ltl_afa::LTLSubtreeEnforcer;
 pub use size_bound::SizeBoundEnforcer;
 pub use structure::AFASkTypeEnforcer;
@@ -27,4 +31,73 @@ pub use structure::AFASpecificStructureEnforcer;
 pub trait Enforcer {
     /// 生成规则
     fn rules(&self, ctx: &Context) -> Vec<PropExpr>;
+
+    fn rules_cnf(&self, ctx: &Context) -> Vec<PropExpr> {
+        self.rules(ctx)
+            .into_iter()
+            .flat_map(|v| match crate::sat::convert_cnf(v) {
+                PropExpr::ChainedBinary(BinaryOp::Conjunction, v) => v,
+                _ => unreachable!(),
+            })
+            .collect()
+    }
+}
+
+pub struct ContextEnforcer;
+
+impl Enforcer for ContextEnforcer {
+    fn rules(&self, ctx: &Context) -> Vec<PropExpr> {
+        const SK_TYPES: &[fn(usize) -> Variable] = &[
+            Variable::Literal,
+            Variable::And,
+            Variable::Or,
+            Variable::Until,
+            Variable::Release,
+            Variable::Eventually,
+            Variable::Next,
+            Variable::WNext,
+            Variable::Always,
+        ];
+
+        let n = ctx.max_skeletons();
+        let mut ret = vec![];
+        // AFASkTypeEnforcer
+        println!("running at AFASkTypeEnforcer");
+        for i in 0..n {
+            ret.append(&mut AFASkTypeEnforcer::new(i).rules_cnf(ctx));
+        }
+        // AFASpecificStructureEnforcer
+        println!("running at AFASpecificStructureEnforcer");
+        for i in 0..n {
+            for ty in SK_TYPES {
+                ret.append(&mut AFASpecificStructureEnforcer::new(ty(i)).rules_cnf(ctx));
+            }
+        }
+        // SizeBoundEnforcer
+        println!("running at SizeBoundEnforcer");
+        for i in 0..n {
+            ret.append(&mut SizeBoundEnforcer::new(i).rules_cnf(ctx));
+        }
+        // LTLSubtreeEnforcer
+        println!("running at LTLSubtreeEnforcer");
+        for i in 0..n {
+            for ty in SK_TYPES {
+                ret.append(&mut LTLSubtreeEnforcer::new(ty(i)).rules_cnf(ctx));
+            }
+        }
+        // LTLSizeEnforcer
+        println!("running at LTLSizeEnforcer");
+        ret.append(&mut LTLSizeEnforcer::new().rules_cnf(ctx));
+        // PositiveExampleEnforcer
+        println!("running at PositiveExampleEnforcer");
+        for i in 0..n {
+            for ty in SK_TYPES {
+                for e in ctx.examples() {
+                    ret.append(&mut PositiveExampleEnforcer::new(ty(i), e).rules_cnf(ctx));
+                }
+            }
+        }
+
+        ret
+    }
 }

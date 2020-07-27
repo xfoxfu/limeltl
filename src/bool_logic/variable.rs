@@ -1,4 +1,4 @@
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
 pub enum Variable {
     /// skeleton `.0` is logic `a ^ b`
     And(usize),

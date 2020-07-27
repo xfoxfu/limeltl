@@ -1,7 +1,7 @@
 use crate::bool_logic::{BinaryOp, PropExpr, UnaryOp};
 
 /// 将任意逻辑表达式转换为 CNF 形式
-pub fn covert_cnf(val: PropExpr) -> PropExpr {
+pub fn convert_cnf(val: PropExpr) -> PropExpr {
     PropExpr::chained_and(
         flatten(conv_cnf(elim_not(elim_impl_eq(val))))
             .into_iter()
@@ -133,12 +133,13 @@ fn conv_cnf(e: PropExpr) -> Vec<PropExpr> {
             ret
         }
         PropExpr::ChainedBinary(BinaryOp::Disjunction, vals) => {
-            dbg!(&vals);
             if let [f, rest @ ..] = vals.as_slice() {
                 if rest.len() > 0 {
                     conv_cnf(PropExpr::or(
                         f.clone(),
-                        PropExpr::chained_or(rest.into_iter().cloned().collect()),
+                        PropExpr::chained_and(conv_cnf(PropExpr::chained_or(
+                            rest.into_iter().cloned().collect(),
+                        ))),
                     ))
                 } else {
                     vec![f.clone()]

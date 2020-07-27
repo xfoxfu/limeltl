@@ -6,7 +6,7 @@ use crate::context::Context;
 pub struct SizeBoundEnforcer(usize);
 
 impl SizeBoundEnforcer {
-    fn new(child: usize) -> Self {
+    pub fn new(child: usize) -> Self {
         Self(child)
     }
 }

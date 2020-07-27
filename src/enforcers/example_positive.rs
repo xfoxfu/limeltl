@@ -2,16 +2,16 @@ use super::Enforcer;
 use crate::bool_logic::{PropExpr, Variable};
 use crate::context::{Context, Example};
 
-fn make_rule<F: Fn() -> Variable>(
-    ctx: Context,
-    ex: Example,
+fn make_rule(
+    ctx: &Context,
+    ex: &Example,
     ty: Variable,
     s1: usize,
     s2: usize,
     t: usize,
-    max_e: usize,
 ) -> Vec<PropExpr> {
     let e = ex.id();
+    let max_e = ctx.example_count();
     use Variable::*;
     match ty {
         Variable::And(s) => {
@@ -80,7 +80,7 @@ fn make_rule<F: Fn() -> Variable>(
         .collect(),
         Variable::Literal(s) => (0..ctx.word_count())
             .map(|v| {
-                if !ex.contains(v) {
+                if !ex.contains_at(t, v) {
                     Exactly(false) << (Run(e, t, s) & Literal(s) & Word(s, v))
                 } else {
                     Exactly(false) << (Run(e, t, s) & Literal(s) & !Word(s, v))
@@ -92,25 +92,27 @@ fn make_rule<F: Fn() -> Variable>(
 }
 
 /// 确保给定类型的子树的正例规则
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub struct PositiveExampleEnforcer(Variable, usize, usize);
+#[derive(Debug, Copy, Clone)]
+pub struct PositiveExampleEnforcer<'a>(Variable, &'a Example);
 
-impl PositiveExampleEnforcer {
-    /// 构造 LTL Enforcer
-    ///
-    /// `ty` - 当前节点类型变量
-    ///
-    /// `n` - 总节点数
-    ///
-    /// `vars` - 样例中变量数量
-    pub fn new(ty: Variable, n: usize, vars: usize) -> Self {
-        Self(ty, n, vars)
+impl<'a> PositiveExampleEnforcer<'a> {
+    /// 构造正例的 Enforcer
+    pub fn new(ty: Variable, ex: &'a Example) -> Self {
+        Self(ty, ex)
     }
 }
 
-impl Enforcer for PositiveExampleEnforcer {
+impl<'a> Enforcer for PositiveExampleEnforcer<'a> {
     fn rules(&self, ctx: &Context) -> Vec<PropExpr> {
-        unimplemented!()
+        let mut ret = vec![];
+        for s1 in (self.0.skeleton_id() + 1)..ctx.max_skeletons() {
+            for s2 in (self.0.skeleton_id() + 2)..ctx.max_skeletons() {
+                for t in 0..(self.1.size()) {
+                    ret.append(&mut make_rule(ctx, self.1, self.0, s1, s2, t));
+                }
+            }
+        }
+        ret
     }
 }
 
