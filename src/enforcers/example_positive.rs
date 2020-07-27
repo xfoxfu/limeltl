@@ -11,11 +11,11 @@ fn make_rule(
     t: usize,
 ) -> Vec<PropExpr> {
     let e = ex.id();
-    let max_e = ctx.example_count();
+    let ex_size = ex.size() - 1;
     use Variable::*;
     match ty {
         Variable::And(s) => {
-            if t == max_e {
+            if t == ex_size {
                 vec![]
             } else {
                 vec![
@@ -29,20 +29,20 @@ fn make_rule(
                 << (Run(e, t, s) & Or(s) & LeftChild(s, s1) & RightChild(s, s2)),
         ],
         Variable::Next(s) => vec![
-            (if t < max_e {
+            (if t < ex_size {
                 Run(e, t + 1, s)
             } else {
                 Exactly(false)
             }) << (Run(e, t, s) & Next(s) & LeftChild(s, s1)),
         ],
         Variable::WNext(s) => vec![
-            (if t < max_e {
+            (if t < ex_size {
                 Run(e, t + 1, s)
             } else {
                 Exactly(true)
             }) << (Run(e, t, s) & WNext(s) & LeftChild(s, s1)),
         ],
-        Variable::Until(s) => vec![if t < max_e {
+        Variable::Until(s) => vec![if t < ex_size {
             (Run(e, t, s2) | (Run(e, t + 1, s) & Run(e, t, s1)))
                 << (Run(e, t, s) & Until(s) & LeftChild(s, s1) & RightChild(s, s2))
         } else {
@@ -51,7 +51,7 @@ fn make_rule(
         Variable::Release(s) => std::iter::once(Some(
             Run(e, t, s2) << (Run(e, t, s) & Release(s) & RightChild(s, s2)),
         ))
-        .chain(std::iter::once(if t < max_e {
+        .chain(std::iter::once(if t < ex_size {
             Some(
                 (Run(e, t, s2) | Run(e, t + 1, s))
                     << (Run(e, t, s) & Release(s) & LeftChild(s, s1) & RightChild(s, s2)),
@@ -62,7 +62,7 @@ fn make_rule(
         .filter_map(|x| x)
         .collect(),
         Variable::Eventually(s) => vec![
-            (if t < max_e {
+            (if t < ex_size {
                 Run(e, t, s1) | Run(e, t + 1, s)
             } else {
                 Run(e, t, s1).into()
@@ -71,7 +71,7 @@ fn make_rule(
         Variable::Always(s) => std::iter::once(Some(
             Run(e, t, s1) << (Run(e, t, s) & Always(s) & LeftChild(s, s1)),
         ))
-        .chain(std::iter::once(if t < max_e {
+        .chain(std::iter::once(if t < ex_size {
             Some(Run(e, t + 1, s) << (Run(e, t, s) & Always(s) & LeftChild(s, s1)))
         } else {
             None
@@ -81,9 +81,9 @@ fn make_rule(
         Variable::Literal(s) => (0..ctx.word_count())
             .map(|v| {
                 if !ex.contains_at(t, v) {
-                    Exactly(false) << (Run(e, t, s) & Literal(s) & Word(s, v))
+                    Exactly(false) << (Run(e, t, s) & Literal(s) & Word(s, v, true))
                 } else {
-                    Exactly(false) << (Run(e, t, s) & Literal(s) & !Word(s, v))
+                    Exactly(false) << (Run(e, t, s) & Literal(s) & Word(s, v, false))
                 }
             })
             .collect(),
@@ -105,6 +105,7 @@ impl<'a> PositiveExampleEnforcer<'a> {
 impl<'a> Enforcer for PositiveExampleEnforcer<'a> {
     fn rules(&self, ctx: &Context) -> Vec<PropExpr> {
         let mut ret = vec![];
+        ret.append(&mut vec![Variable::Run(self.1.id(), 0, 0).into()]);
         for s1 in (self.0.skeleton_id() + 1)..ctx.max_skeletons() {
             for s2 in (self.0.skeleton_id() + 2)..ctx.max_skeletons() {
                 for t in 0..(self.1.size()) {

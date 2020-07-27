@@ -40,6 +40,10 @@ impl Example {
     pub fn contains_at(&self, t: usize, v: usize) -> bool {
         self.sequence[t].contains(&Word::new_unchecked(v))
     }
+    /// 返回其为正例还是反例
+    pub fn is_pos(&self) -> bool {
+        self.is_positive
+    }
 }
 
 impl PartialEq for Example {

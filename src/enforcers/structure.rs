@@ -76,10 +76,7 @@ impl Enforcer for AFASpecificStructureEnforcer {
             })
             .collect();
         if vars.len() > 0 {
-            rules.push(PropExpr::biconditional(
-                self.0.into(),
-                PropExpr::chained_and(vars),
-            ));
+            rules.push(self.0 >> PropExpr::chained_and(vars));
         }
         rules
     }

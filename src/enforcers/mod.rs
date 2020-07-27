@@ -14,6 +14,7 @@ use crate::{
     bool_logic::{BinaryOp, PropExpr, Variable},
     context::Context,
 };
+use rayon::prelude::*;
 
 mod afa_size;
 mod example_positive;
@@ -22,7 +23,7 @@ mod size_bound;
 mod structure;
 
 pub use afa_size::LTLSizeEnforcer;
-use example_positive::PositiveExampleEnforcer;
+pub use example_positive::PositiveExampleEnforcer;
 pub use ltl_afa::LTLSubtreeEnforcer;
 pub use size_bound::SizeBoundEnforcer;
 pub use structure::AFASkTypeEnforcer;
@@ -33,14 +34,41 @@ pub trait Enforcer {
     fn rules(&self, ctx: &Context) -> Vec<PropExpr>;
 
     fn rules_cnf(&self, ctx: &Context) -> Vec<PropExpr> {
-        self.rules(ctx)
-            .into_iter()
-            .flat_map(|v| match crate::sat::convert_cnf(v) {
-                PropExpr::ChainedBinary(BinaryOp::Conjunction, v) => v,
+        let mut ret = vec![];
+        println!("生成规则");
+        for (i, v) in self.rules(ctx).into_iter().enumerate() {
+            println!("{:2} {:?}", i, v);
+            let r = crate::sat::convert_cnf(v);
+            println!("{:2} {:?}", i, r);
+            match r {
+                PropExpr::ChainedBinary(BinaryOp::Conjunction, mut v) => ret.append(&mut v),
                 _ => unreachable!(),
-            })
-            .collect()
+            };
+        }
+        // self.rules(ctx)
+        //     .into_iter()
+        //     .flat_map(|v| match crate::sat::convert_cnf(v) {
+        //         PropExpr::ChainedBinary(BinaryOp::Conjunction, v) => v,
+        //         _ => unreachable!(),
+        //     })
+        //     .collect()
+        ret
     }
+}
+
+fn one_of(iter: impl Iterator<Item = Variable> + Clone) -> PropExpr {
+    let mut sub_routes = vec![];
+    // for each possible u
+    for u in iter.clone() {
+        // create a chained_or where only u is not neg
+        sub_routes.push(PropExpr::chained_and(
+            iter.clone()
+                .map(|v| if v == u { v.clone().into() } else { !v.clone() })
+                .collect(),
+        ));
+    }
+
+    PropExpr::chained_or(sub_routes)
 }
 
 pub struct ContextEnforcer;
@@ -49,23 +77,23 @@ impl Enforcer for ContextEnforcer {
     fn rules(&self, ctx: &Context) -> Vec<PropExpr> {
         const SK_TYPES: &[fn(usize) -> Variable] = &[
             Variable::Literal,
-            Variable::And,
+            // Variable::And,
             Variable::Or,
             Variable::Until,
-            Variable::Release,
-            Variable::Eventually,
+            // Variable::Release,
+            // Variable::Eventually,
             Variable::Next,
-            Variable::WNext,
-            Variable::Always,
+            // Variable::WNext,
+            // Variable::Always,
         ];
 
         let n = ctx.max_skeletons();
         let mut ret = vec![];
         // AFASkTypeEnforcer
-        println!("running at AFASkTypeEnforcer");
-        for i in 0..n {
-            ret.append(&mut AFASkTypeEnforcer::new(i).rules_cnf(ctx));
-        }
+        // println!("running at AFASkTypeEnforcer");
+        // for i in 0..n {
+        //     ret.append(&mut AFASkTypeEnforcer::new(i).rules_cnf(ctx));
+        // }
         // AFASpecificStructureEnforcer
         println!("running at AFASpecificStructureEnforcer");
         for i in 0..n {
@@ -89,14 +117,16 @@ impl Enforcer for ContextEnforcer {
         println!("running at LTLSizeEnforcer");
         ret.append(&mut LTLSizeEnforcer::new().rules_cnf(ctx));
         // PositiveExampleEnforcer
-        println!("running at PositiveExampleEnforcer");
-        for i in 0..n {
-            for ty in SK_TYPES {
-                for e in ctx.examples() {
-                    ret.append(&mut PositiveExampleEnforcer::new(ty(i), e).rules_cnf(ctx));
-                }
-            }
-        }
+        // println!("running at PositiveExampleEnforcer");
+        // for i in 0..n {
+        //     for ty in SK_TYPES {
+        //         for e in ctx.examples() {
+        //             if e.is_pos() {
+        //                 ret.append(&mut PositiveExampleEnforcer::new(ty(i), e).rules_cnf(ctx));
+        //             }
+        //         }
+        //     }
+        // }
 
         ret
     }

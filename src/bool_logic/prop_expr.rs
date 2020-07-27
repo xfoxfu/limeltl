@@ -1,6 +1,6 @@
 use super::Variable;
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Eq, PartialEq, Clone)]
 pub enum PropExpr {
     /// unary expression
     Unary(UnaryOp, Box<PropExpr>),
@@ -37,9 +37,9 @@ impl PropExpr {
     }
 
     pub fn chained_and(exprs: Vec<PropExpr>) -> Self {
-        if exprs.len() == 0 {
-            panic!("empty list of sub exprs");
-        }
+        // if exprs.len() == 0 {
+        //     panic!("empty list of sub exprs");
+        // }
         PropExpr::ChainedBinary(BinaryOp::Conjunction, exprs)
     }
     pub fn chained_or(exprs: Vec<PropExpr>) -> Self {
@@ -50,13 +50,21 @@ impl PropExpr {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+#[derive(Eq, PartialEq, Copy, Clone)]
 pub enum UnaryOp {
     /// `!a` invertion of expression
     Negation,
 }
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+impl std::fmt::Debug for UnaryOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UnaryOp::Negation => f.write_str("!"),
+        }
+    }
+}
+
+#[derive(Eq, PartialEq, Copy, Clone)]
 pub enum BinaryOp {
     /// `a ^ b` conjuction of two expression
     Conjunction,
@@ -70,13 +78,25 @@ pub enum BinaryOp {
     BiConditional,
 }
 
+impl std::fmt::Debug for BinaryOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            BinaryOp::BiConditional => "<->",
+            BinaryOp::Conjunction => "&",
+            BinaryOp::ConverseImplication => "<-",
+            BinaryOp::Disjunction => "|",
+            BinaryOp::MaterialImplication => "->",
+        })
+    }
+}
+
 impl Into<PropExpr> for Variable {
     fn into(self) -> PropExpr {
         PropExpr::var(self)
     }
 }
 
-#[cfg(test)]
+// #[cfg(test)]
 impl PropExpr {
     pub fn _validate(&self, model: &[Variable]) -> bool {
         match self {
@@ -153,5 +173,28 @@ impl std::ops::Not for Variable {
     type Output = PropExpr;
     fn not(self) -> Self::Output {
         PropExpr::not(self.into())
+    }
+}
+
+impl std::fmt::Debug for PropExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PropExpr::Unary(op, val) => f.write_fmt(format_args!("{:?}{:?}", op, val)),
+            PropExpr::Binary(lhs, op, rhs) => {
+                f.write_fmt(format_args!("({:?} {:?} {:?})", lhs, op, rhs))
+            }
+            PropExpr::ChainedBinary(op, vals) => {
+                f.write_str("(")?;
+                for (i, v) in vals.iter().enumerate() {
+                    if i > 0 {
+                        f.write_fmt(format_args!(" {:?} ", op))?;
+                    }
+                    f.write_fmt(format_args!("{:?}", v))?;
+                }
+                f.write_str(")")?;
+                Ok(())
+            }
+            PropExpr::Variable(var) => f.write_fmt(format_args!("{:?}", var)),
+        }
     }
 }

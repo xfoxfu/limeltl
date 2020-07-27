@@ -23,7 +23,7 @@ fn elim_impl_eq(val: PropExpr) -> PropExpr {
         PropExpr::Binary(lhs, BinaryOp::BiConditional, rhs) => {
             let lhs = elim_impl_eq(*lhs);
             let rhs = elim_impl_eq(*rhs);
-            (lhs.clone() & rhs.clone()) | (!lhs & !rhs)
+            (!lhs.clone() | rhs.clone()) & (lhs | !rhs)
         }
         // recursion case
         PropExpr::Unary(op, rhs) => match *rhs {
@@ -184,7 +184,14 @@ fn flatten_single(expr: PropExpr) -> Vec<PropExpr> {
         }
         v @ PropExpr::Unary(UnaryOp::Negation, _) => vec![v],
         v @ PropExpr::Variable(_) => vec![v],
-        _ => unreachable!(),
+        PropExpr::ChainedBinary(_, exprs) => {
+            if exprs.len() <= 1 {
+                exprs
+            } else {
+                unreachable!()
+            }
+        }
+        _ => unreachable!("{:?}", expr),
     }
 }
 
@@ -203,7 +210,7 @@ mod test {
             // (c) A <-> B
             assert_eq!(
                 elim_impl_eq(PropExpr::biconditional(V(1).into(), V(2) | V(3))),
-                (V(1) & (V(2) | V(3))) | (!V(1) & !(V(2) | V(3))),
+                (!V(1) | (V(2) | V(3))) & (V(1) | !(V(2) | V(3))),
             );
         }
 
@@ -280,6 +287,14 @@ mod test {
             // (d) !p
             assert_eq!(conv_cnf(!V(1)), vec![!V(1)]);
         }
+
+        #[test]
+        fn extra() {
+            assert_eq!(
+                conv_cnf((!V(0) | (!V(1) & !V(2))) & (V(0) | V(1) | V(2))),
+                vec![!V(0) | !V(1), !V(0) | !V(2), V(0) | V(1) | V(2)]
+            );
+        }
     }
 
     mod flatten {
@@ -303,6 +318,28 @@ mod test {
                     vec![V(1).into(), V(2).into()],
                     vec![V(3).into(), !V(4), V(5).into()]
                 ]
+            );
+        }
+    }
+
+    mod convert_cnf {
+        use super::super::*;
+        use crate::bool_logic::Variable::Always as V;
+
+        #[test]
+        fn extra() {
+            let expr = PropExpr::biconditional(V(0).into(), !V(1) & !V(2));
+            assert_eq!(
+                elim_impl_eq(expr.clone()),
+                ((!V(0) | (!V(1) & !V(2))) & (V(0) | !(!V(1) & !V(2))))
+            );
+            assert_eq!(
+                convert_cnf(expr.clone()),
+                PropExpr::chained_and(vec![
+                    PropExpr::chained_or(vec![!V(0), !V(1)]),
+                    PropExpr::chained_or(vec![!V(0), !V(2)]),
+                    PropExpr::chained_or(vec![V(0).into(), V(1).into(), V(2).into()]),
+                ])
             );
         }
     }

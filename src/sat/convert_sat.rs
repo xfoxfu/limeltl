@@ -4,9 +4,10 @@ use crate::bool_logic::{BinaryOp, PropExpr, UnaryOp, Variable};
 use std::collections::HashMap;
 use varisat::{CnfFormula, ExtendFormula, Lit, Var};
 
-struct SATConverter {
-    vars: HashMap<Variable, Var>,
-    formula: CnfFormula,
+#[derive(Debug)]
+pub struct SATConverter {
+    pub vars: HashMap<Variable, Var>, // TODO: pub for debug use
+    pub formula: CnfFormula,          // TODO: pub for debug use
 }
 
 impl SATConverter {
@@ -33,7 +34,7 @@ impl SATConverter {
         if let PropExpr::ChainedBinary(BinaryOp::Conjunction, clauses) = expr {
             // 解析到子句
             for clause in clauses.into_iter() {
-                if let PropExpr::ChainedBinary(BinaryOp::Disjunction, vars) = clause {
+                if let PropExpr::ChainedBinary(BinaryOp::Disjunction, vars) = clause.clone() {
                     // 构造变量
                     let lits: Vec<Lit> = vars
                         .into_iter()
@@ -46,7 +47,10 @@ impl SATConverter {
                             _ => panic!("input has nested structure"),
                         })
                         .collect();
-                    self.formula.add_clause(&lits);
+                    if lits.len() > 0 {
+                        println!("{:?}\n{:?}", &clause, &lits);
+                        self.formula.add_clause(&lits);
+                    }
                 } else {
                     panic!("input is not a conjunction of disjunction")
                 }

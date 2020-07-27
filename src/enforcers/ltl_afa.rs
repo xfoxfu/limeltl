@@ -34,7 +34,7 @@ impl LTLSubtreeEnforcer {
                 )
             })
             .collect();
-        PropExpr::biconditional(self.0.into(), PropExpr::chained_or(vars))
+        self.0 >> PropExpr::chained_or(vars)
     }
 }
 
@@ -60,7 +60,36 @@ impl Enforcer for LTLSubtreeEnforcer {
                 false
             });
 
-            rules.push(self.subtree_rule(0..word_cnt, Variable::Word));
+            // TODO: add negative literal word
+            rules.push({
+                let range = 0..word_cnt;
+                let i = self.0.skeleton_id();
+                // let vars = range
+                //     .clone()
+                //     .map(|j| {
+                //         PropExpr::chained_and(([true, false]).iter().flat_map(|b| {
+                //             std::iter::once(Variable::Word(i, j, true).into())
+                //                 .chain(
+                //                     range
+                //                         .clone()
+                //                         .filter(|v| *v != j)
+                //                         .map(|k| !Variable::Word(i, k, true)),
+                //                 )
+                //                 .collect()
+                //         }))
+                //     })
+                //     .collect();
+
+                use itertools::Itertools;
+
+                self.0
+                    >> super::one_of(
+                        [true, false]
+                            .iter()
+                            .cartesian_product(range)
+                            .map(|(p, w)| Variable::Word(i, w, *p)),
+                    )
+            });
         }
         rules
     }

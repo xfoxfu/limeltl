@@ -16,7 +16,7 @@ impl LTLSizeEnforcer {
 impl Enforcer for LTLSizeEnforcer {
     fn rules(&self, ctx: &Context) -> Vec<PropExpr> {
         let n = ctx.max_skeletons();
-        ((n - 2)..=n)
+        ((n - 2)..n)
             .flat_map(|i| {
                 (&[
                     Variable::And,
@@ -27,7 +27,7 @@ impl Enforcer for LTLSizeEnforcer {
                     .into_iter()
                     .map(move |f| !f(i.clone()))
             })
-            .chain(((n - 1)..=n).flat_map(|i| {
+            .chain(((n - 1)..n).flat_map(|i| {
                 (&[
                     Variable::Eventually,
                     Variable::Next,
