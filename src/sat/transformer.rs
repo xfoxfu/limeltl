@@ -1,4 +1,5 @@
 use crate::bool_logic::{BinaryOp, PropExpr, UnaryOp};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// 将任意逻辑表达式转换为 CNF 形式
 pub fn convert_cnf(val: PropExpr) -> PropExpr {
@@ -125,9 +126,23 @@ fn conv_cnf(e: PropExpr) -> Vec<PropExpr> {
             let left = conv_cnf(*lhs);
             let right = conv_cnf(*rhs);
             let mut ret = vec![];
-            for l in left.iter() {
-                for r in right.iter() {
-                    ret.push(l.clone() | r.clone());
+
+            if left.len() > 1 && right.len() > 1 {
+                static OBJECT_COUNTER: AtomicUsize = AtomicUsize::new(0);
+
+                use crate::bool_logic::Variable;
+                let id = OBJECT_COUNTER.fetch_add(1, Ordering::SeqCst);
+                ret.append(&mut conv_cnf(elim_not(elim_impl_eq(
+                    Variable::Phantom(id) >> PropExpr::chained_and(left),
+                ))));
+                ret.append(&mut conv_cnf(elim_not(elim_impl_eq(
+                    !Variable::Phantom(id) >> PropExpr::chained_and(right),
+                ))));
+            } else {
+                for l in left.iter() {
+                    for r in right.iter() {
+                        ret.push(l.clone() | r.clone());
+                    }
                 }
             }
             ret

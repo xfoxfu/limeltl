@@ -28,6 +28,8 @@ pub enum Variable {
     Word(usize, usize, bool),
     /// Exactly `true` or `false`
     Exactly(bool),
+    /// 用于简化求解的无关变量
+    Phantom(usize),
 }
 
 impl Variable {
@@ -91,6 +93,7 @@ impl std::fmt::Debug for Variable {
                 v
             )),
             Variable::Exactly(v) => f.write_fmt(format_args!("{}", v)),
+            Variable::Phantom(i) => f.write_fmt(format_args!("PHANTOM({})", i)),
         }
     }
 }

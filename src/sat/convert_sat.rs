@@ -48,7 +48,6 @@ impl SATConverter {
                         })
                         .collect();
                     if lits.len() > 0 {
-                        println!("{:?}\n{:?}", &clause, &lits);
                         self.formula.add_clause(&lits);
                     }
                 } else {
@@ -61,7 +60,7 @@ impl SATConverter {
     }
 
     /// 结束构建，返回 `CnfFormula`
-    pub fn finish(self) -> CnfFormula {
-        self.formula
+    pub fn finish(self) -> (HashMap<Variable, Var>, CnfFormula) {
+        (self.vars, self.formula)
     }
 }

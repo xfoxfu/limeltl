@@ -17,12 +17,14 @@ use crate::{
 use rayon::prelude::*;
 
 mod afa_size;
+mod example_negative;
 mod example_positive;
 mod ltl_afa;
 mod size_bound;
 mod structure;
 
 pub use afa_size::LTLSizeEnforcer;
+pub use example_negative::NegativeExampleEnforcer;
 pub use example_positive::PositiveExampleEnforcer;
 pub use ltl_afa::LTLSubtreeEnforcer;
 pub use size_bound::SizeBoundEnforcer;
@@ -34,25 +36,13 @@ pub trait Enforcer {
     fn rules(&self, ctx: &Context) -> Vec<PropExpr>;
 
     fn rules_cnf(&self, ctx: &Context) -> Vec<PropExpr> {
-        let mut ret = vec![];
-        println!("生成规则");
-        for (i, v) in self.rules(ctx).into_iter().enumerate() {
-            println!("{:2} {:?}", i, v);
-            let r = crate::sat::convert_cnf(v);
-            println!("{:2} {:?}", i, r);
-            match r {
-                PropExpr::ChainedBinary(BinaryOp::Conjunction, mut v) => ret.append(&mut v),
+        self.rules(ctx)
+            .into_iter()
+            .flat_map(|v| match crate::sat::convert_cnf(v) {
+                PropExpr::ChainedBinary(BinaryOp::Conjunction, v) => v,
                 _ => unreachable!(),
-            };
-        }
-        // self.rules(ctx)
-        //     .into_iter()
-        //     .flat_map(|v| match crate::sat::convert_cnf(v) {
-        //         PropExpr::ChainedBinary(BinaryOp::Conjunction, v) => v,
-        //         _ => unreachable!(),
-        //     })
-        //     .collect()
-        ret
+            })
+            .collect()
     }
 }
 
@@ -77,56 +67,52 @@ impl Enforcer for ContextEnforcer {
     fn rules(&self, ctx: &Context) -> Vec<PropExpr> {
         const SK_TYPES: &[fn(usize) -> Variable] = &[
             Variable::Literal,
-            // Variable::And,
+            Variable::And,
             Variable::Or,
             Variable::Until,
-            // Variable::Release,
-            // Variable::Eventually,
+            Variable::Release,
+            Variable::Eventually,
             Variable::Next,
-            // Variable::WNext,
-            // Variable::Always,
+            Variable::WNext,
+            Variable::Always,
         ];
 
         let n = ctx.max_skeletons();
         let mut ret = vec![];
         // AFASkTypeEnforcer
-        // println!("running at AFASkTypeEnforcer");
-        // for i in 0..n {
-        //     ret.append(&mut AFASkTypeEnforcer::new(i).rules_cnf(ctx));
-        // }
+        for i in 0..n {
+            ret.append(&mut AFASkTypeEnforcer::new(i).rules_cnf(ctx));
+        }
         // AFASpecificStructureEnforcer
-        println!("running at AFASpecificStructureEnforcer");
         for i in 0..n {
             for ty in SK_TYPES {
                 ret.append(&mut AFASpecificStructureEnforcer::new(ty(i)).rules_cnf(ctx));
             }
         }
         // SizeBoundEnforcer
-        println!("running at SizeBoundEnforcer");
         for i in 0..n {
             ret.append(&mut SizeBoundEnforcer::new(i).rules_cnf(ctx));
         }
         // LTLSubtreeEnforcer
-        println!("running at LTLSubtreeEnforcer");
         for i in 0..n {
             for ty in SK_TYPES {
                 ret.append(&mut LTLSubtreeEnforcer::new(ty(i)).rules_cnf(ctx));
             }
         }
         // LTLSizeEnforcer
-        println!("running at LTLSizeEnforcer");
         ret.append(&mut LTLSizeEnforcer::new().rules_cnf(ctx));
         // PositiveExampleEnforcer
-        // println!("running at PositiveExampleEnforcer");
-        // for i in 0..n {
-        //     for ty in SK_TYPES {
-        //         for e in ctx.examples() {
-        //             if e.is_pos() {
-        //                 ret.append(&mut PositiveExampleEnforcer::new(ty(i), e).rules_cnf(ctx));
-        //             }
-        //         }
-        //     }
-        // }
+        for i in 0..n {
+            for ty in SK_TYPES {
+                for e in ctx.examples() {
+                    if e.is_pos() {
+                        ret.append(&mut PositiveExampleEnforcer::new(ty(i), e).rules_cnf(ctx));
+                    } else {
+                        ret.append(&mut NegativeExampleEnforcer::new(ty(i), e).rules_cnf(ctx))
+                    }
+                }
+            }
+        }
 
         ret
     }
