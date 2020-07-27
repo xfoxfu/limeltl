@@ -45,12 +45,31 @@ impl Enforcer for LTLSubtreeEnforcer {
         let n = ctx.max_skeletons();
         let word_cnt = ctx.word_count();
         // has left subtree
-        if ty.is_unary() || ty.is_binary() {
-            rules.push(self.subtree_rule((self.0.skeleton_id() + 1)..n, Variable::LeftChild));
+        if ty.is_unary() {
+            rules.push(
+                self.0
+                    >> super::one_of(
+                        ((self.0.skeleton_id() + 1)..n)
+                            .map(|s1| Variable::LeftChild(self.0.skeleton_id(), s1)),
+                    ),
+            );
         }
         // has right subtree
         if ty.is_binary() {
-            rules.push(self.subtree_rule((self.0.skeleton_id() + 1)..n, Variable::RightChild));
+            rules.push(
+                self.0
+                    >> super::one_of(
+                        ((self.0.skeleton_id() + 1)..(n - 1))
+                            .map(|s1| Variable::LeftChild(self.0.skeleton_id(), s1)),
+                    ),
+            );
+            rules.push(
+                self.0
+                    >> super::one_of(
+                        ((self.0.skeleton_id() + 2)..n)
+                            .map(|s2| Variable::RightChild(self.0.skeleton_id(), s2)),
+                    ),
+            );
         }
         // is literal
         if ty.is_atom() {

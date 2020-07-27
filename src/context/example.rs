@@ -30,12 +30,12 @@ impl Example {
     pub fn get(&self, t: usize) -> &HashSet<Word> {
         &self.sequence[t]
     }
-    /// 确认其是否包含特定的变量
-    pub fn contains(&self, v: usize) -> bool {
-        self.sequence
-            .iter()
-            .any(|s| s.contains(&Word::new_unchecked(v)))
-    }
+    // /// 确认其是否包含特定的变量
+    // pub fn contains(&self, v: usize) -> bool {
+    //     self.sequence
+    //         .iter()
+    //         .any(|s| s.contains(&Word::new_unchecked(v)))
+    // }
     /// 确定在给定时间是否包含特定的变量
     pub fn contains_at(&self, t: usize, v: usize) -> bool {
         self.sequence[t].contains(&Word::new_unchecked(v))

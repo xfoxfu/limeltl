@@ -106,10 +106,26 @@ impl<'a> Enforcer for PositiveExampleEnforcer<'a> {
     fn rules(&self, ctx: &Context) -> Vec<PropExpr> {
         let mut ret = vec![];
         ret.append(&mut vec![Variable::Run(self.1.id(), 0, 0).into()]);
-        for s1 in (self.0.skeleton_id() + 1)..ctx.max_skeletons() {
-            for s2 in (self.0.skeleton_id() + 2)..ctx.max_skeletons() {
+        if self.0.is_atom() {
+            for t in 0..(self.1.size()) {
+                ret.append(&mut make_rule(
+                    ctx, self.1, self.0, 0x7F7F7F7F, 0x7F7F7F7F, t,
+                ));
+            }
+        }
+        if self.0.is_unary() {
+            for s1 in (self.0.skeleton_id() + 1)..ctx.max_skeletons() {
                 for t in 0..(self.1.size()) {
-                    ret.append(&mut make_rule(ctx, self.1, self.0, s1, s2, t));
+                    ret.append(&mut make_rule(ctx, self.1, self.0, s1, 0x7F7F7F7F, t));
+                }
+            }
+        }
+        if self.0.is_binary() {
+            for s1 in (self.0.skeleton_id() + 1)..ctx.max_skeletons() {
+                for s2 in (self.0.skeleton_id() + 2)..ctx.max_skeletons() {
+                    for t in 0..(self.1.size()) {
+                        ret.append(&mut make_rule(ctx, self.1, self.0, s1, s2, t));
+                    }
                 }
             }
         }

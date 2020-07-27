@@ -105,10 +105,12 @@ impl Enforcer for ContextEnforcer {
         for e in ctx.examples() {
             for i in 0..n {
                 for ty in SK_TYPES {
+                    use std::io::Write;
+                    writeln!(std::io::stderr(), "{} {} {:?}", e.id(), i, ty(i));
                     if e.is_pos() {
                         ret.append(&mut PositiveExampleEnforcer::new(ty(i), e).rules(ctx));
                     } else {
-                        ret.append(&mut NegativeExampleEnforcer::new(ty(i), e).rules(ctx))
+                        ret.append(&mut NegativeExampleEnforcer::new(ty(i), e).rules(ctx));
                     }
                 }
             }
