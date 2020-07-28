@@ -17,25 +17,6 @@ impl LTLSubtreeEnforcer {
     pub fn new(ty: Variable) -> Self {
         Self(ty)
     }
-
-    fn subtree_rule<I, F>(&self, range: I, f: F) -> PropExpr
-    where
-        I: Iterator<Item = usize> + Clone,
-        F: Fn(usize, usize) -> Variable,
-    {
-        let i = self.0.skeleton_id();
-        let vars = range
-            .clone()
-            .map(|j| {
-                PropExpr::chained_and(
-                    std::iter::once(f(i, j).into())
-                        .chain(range.clone().filter(|v| *v != j).map(|k| !f(i, k)))
-                        .collect(),
-                )
-            })
-            .collect();
-        self.0 >> PropExpr::chained_or(vars)
-    }
 }
 
 impl Enforcer for LTLSubtreeEnforcer {

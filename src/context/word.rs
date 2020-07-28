@@ -7,6 +7,7 @@ impl Word {
         Self(id)
     }
 
+    #[allow(dead_code)]
     pub fn new(context: &super::Context, id: usize) -> Result<Self, ()> {
         if id < context.word_count() {
             Ok(Self(id))

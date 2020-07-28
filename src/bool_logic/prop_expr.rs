@@ -29,6 +29,7 @@ impl PropExpr {
     pub fn converse_implication(lhs: PropExpr, rhs: PropExpr) -> Self {
         PropExpr::Binary(Box::new(lhs), BinaryOp::ConverseImplication, Box::new(rhs))
     }
+    #[allow(dead_code)]
     pub fn biconditional(lhs: PropExpr, rhs: PropExpr) -> Self {
         PropExpr::Binary(Box::new(lhs), BinaryOp::BiConditional, Box::new(rhs))
     }

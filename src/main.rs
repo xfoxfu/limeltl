@@ -1,64 +1,69 @@
-#![allow(dead_code)]
-
 mod bool_logic;
 mod context;
 mod enforcers;
+mod options;
 mod sat;
 mod utils;
 
-use bool_logic::{PropExpr, Variable};
-use enforcers::*;
+use bool_logic::Variable;
+use clap::derive::Clap;
+use enforcers::{ContextEnforcer, Enforcer};
+use options::Opts;
 use sat::convert_cnf;
+use std::io::Write;
 
 fn main() {
-    let input =
-        serde_json::from_reader::<_, context::Input>(std::fs::File::open("input.json").unwrap())
-            .unwrap();
+    let opts: Opts = Opts::parse();
+
+    // 读取输入
+    let input = serde_json::from_reader::<_, context::Input>(
+        std::fs::File::open(opts.input).expect("无法打开输入文件"),
+    )
+    .expect("无法解析 JSON");
+    // 打开输出文件
+    let mut output = std::fs::File::create(opts.output).expect("无法打开输出文件");
+
+    // 解析输入
     let mut ctx: context::Context = input.into();
-    for (word, id) in ctx.words() {
-        println!("{} -> {}", word, id);
-    }
-    for ex in ctx.examples() {
-        println!("{:?}", ex);
-    }
-    for n in 3..4 {
-        ctx.set_size_bound(n);
-        let rules = ContextEnforcer.rules(&ctx);
 
-        let mut conv = sat::SATConverter::new();
+    // 构造规则
+    // TODO: 使用逐次迭代 n
+    ctx.set_size_bound(opts.size);
+    let rules = ContextEnforcer.rules(&ctx);
 
-        for rule in rules.into_iter() {
-            println!("c {:?}", rule);
-            let rule_cnf = convert_cnf(rule);
-            conv.add_clause(rule_cnf);
-            // println!("{:?}", conv.formula.iter().last().unwrap());
-            // varisat::dimacs::write_dimacs_clauses(
-            //     &mut std::io::stdout(),
-            //     std::iter::once(conv.formula.iter().last().unwrap()),
-            // )
-            // .unwrap();
+    if opts.fmt_expr {
+        for rule in rules {
+            writeln!(output, "{:?}", rule).expect("写入规则失败");
         }
-        let lit_pos = conv.get_var(&Variable::Exactly(true)).positive();
-        let lit_neg = conv.get_var(&Variable::Exactly(false)).negative();
-        let lits = vec![
-            conv.get_var(&Variable::Until(0)).positive(),
-            // conv.get_var(&Variable::LeftChild(0, 1)).positive(),
-            // conv.get_var(&Variable::RightChild(0, 2)).positive(),
-            // conv.get_var(&Variable::Literal(1)).positive(),
-            // conv.get_var(&Variable::Literal(2)).positive(),
-            // conv.get_var(&Variable::Word(1, 0, true)).positive(),
-            // conv.get_var(&Variable::Word(2, 1, true)).positive(),
-        ];
-        let (vars, formula) = conv.finish();
+        return;
+    }
 
-        let mut solver = varisat::Solver::new();
-        solver.add_formula(&formula);
-        solver.assume(&[lit_pos, lit_neg]);
-        solver.assume(&lits);
+    // 生成 CNF
+    let mut conv = sat::SATConverter::new();
+    for rule in rules.into_iter() {
+        let rule_cnf = convert_cnf(rule);
+        conv.add_clause(rule_cnf);
+    }
+    let lit_pos = conv.get_var(&Variable::Exactly(true)).positive();
+    let lit_neg = conv.get_var(&Variable::Exactly(false)).negative();
+    let (vars, formula) = conv.finish();
 
-        let result = solver.solve().unwrap();
-        println!("n = {}, SAT = {}", n, result);
+    if opts.fmt_cnf {
+        varisat::dimacs::write_dimacs(&mut output, &formula).expect("写入规则失败");
+        return;
+    }
 
+    // 求解
+    let mut solver = varisat::Solver::new();
+    solver.add_formula(&formula);
+    solver.assume(&[lit_pos, lit_neg]);
+    let result = solver.solve().expect("无法进行求解");
+
+    if opts.fmt_res {
+        writeln!(output, "n = {}, SAT = {}", opts.size, result).expect("写入失败");
+        for word in ctx.words() {
+            println!("word {} => {}", word.0, word.1);
+        }
         if result {
             for v in vars
                 .iter()
@@ -70,8 +75,11 @@ fn main() {
                     s => Some(s),
                 })
             {
-                println!("assign {:?} = true", v,);
+                writeln!(output, "{:?} = true", v).expect("写入失败");
             }
         }
+        return;
     }
+
+    panic!("后续功能未实现")
 }

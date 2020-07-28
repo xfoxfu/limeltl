@@ -16,6 +16,7 @@ impl Context {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_bound(max_skeletons: usize) -> Self {
         let mut c = Self::new();
         c.max_skeletons = max_skeletons;
@@ -31,10 +32,6 @@ impl Context {
     /// 例子中变量的最大数量；假定其为 `N`，则可行的例子变量编号为 `0 <= i < N`
     pub fn word_count(&self) -> usize {
         self.vocab.len()
-    }
-    /// 例子数量；假定其为 `N`，则可行的例子编号为 `0 <= i < N`
-    pub fn example_count(&self) -> usize {
-        self.examples.len()
     }
     /// 根据单词的名称获得单词的序号
     pub fn get_word_id(&mut self, word: String) -> usize {

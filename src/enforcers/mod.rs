@@ -7,8 +7,7 @@
 //! 3. `SizeBoundEnforcer` 保证不存在节点重用，从而保证 AFA 大小符合要求
 //! 4. `LTLSubtreeEnforcer` 保证每个节点存在编号大于其自身的子树。
 //! 5. `LTLSizeEnforcer` 检查在 `N-2`（`N-1`）以后不存在二目（单目）子树，从而确保尺寸限制
-//! 6. `PositiveExampleEnforcer` 确保生成的结构接受正例
-//! 7. `NegativeExampleEnforcer` 确保生成的结构拒绝反例
+//! 6. `ExampleEnforcer` 确保生成的结构接受正例（反例）
 
 use crate::{
     bool_logic::{BinaryOp, PropExpr, Variable},
@@ -16,15 +15,13 @@ use crate::{
 };
 
 mod afa_size;
-mod example_negative;
-mod example_positive;
+mod example;
 mod ltl_afa;
 mod size_bound;
 mod structure;
 
 pub use afa_size::LTLSizeEnforcer;
-pub use example_negative::NegativeExampleEnforcer;
-pub use example_positive::PositiveExampleEnforcer;
+pub use example::ExampleEnforcer;
 pub use ltl_afa::LTLSubtreeEnforcer;
 pub use size_bound::SizeBoundEnforcer;
 pub use structure::AFASkTypeEnforcer;
@@ -100,18 +97,11 @@ impl Enforcer for ContextEnforcer {
         }
         // LTLSizeEnforcer
         ret.append(&mut LTLSizeEnforcer::new().rules(ctx));
-        // PositiveExampleEnforcer
-        // NegativeExampleEnforcer
+        // ExampleEnforcer
         for e in ctx.examples() {
             for i in 0..n {
                 for ty in SK_TYPES {
-                    use std::io::Write;
-                    writeln!(std::io::stderr(), "{} {} {:?}", e.id(), i, ty(i));
-                    if e.is_pos() {
-                        ret.append(&mut PositiveExampleEnforcer::new(ty(i), e).rules(ctx));
-                    } else {
-                        ret.append(&mut NegativeExampleEnforcer::new(ty(i), e).rules(ctx));
-                    }
+                    ret.append(&mut ExampleEnforcer::new(ty(i), e).rules(ctx));
                 }
             }
         }
