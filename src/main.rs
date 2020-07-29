@@ -1,6 +1,7 @@
 mod bool_logic;
 mod context;
 mod enforcers;
+mod ltl;
 mod options;
 mod sat;
 mod utils;
@@ -81,5 +82,13 @@ fn main() {
         return;
     }
 
-    panic!("后续功能未实现")
+    // 生成语法树
+    let pos_vars: Vec<Variable> = vars
+        .iter()
+        .filter(|(_, l)| solver.model().unwrap().contains(&l.positive()))
+        .map(|(v, _)| v.clone())
+        .collect();
+    let model = ltl::Model::new(&ctx, &pos_vars);
+    let ltl = ltl::make_ltl(&model, 0);
+    writeln!(output, "{}", ltl).expect("写入失败");
 }
