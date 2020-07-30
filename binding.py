@@ -24,5 +24,5 @@ def solve(exec_path, input_content, max_size=10, output=True):
 
 
 if __name__ == "__main__":
-    print('求解结果', solve('target/release/aaai21',
+    print('求解结果', solve('target/release/limeltl',
                         '{"vocab":["p","q","r"],"traces_pos":[[["p"],["p"],["q"]],[["p"],["q"]],[["p","r"],["q"]],[["q","r"]]],"traces_neg":[[["p"],["r"],["q"]],[["p"],["r"]],[["r"],["q"]]]}', 10))

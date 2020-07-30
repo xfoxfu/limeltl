@@ -7,11 +7,11 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug executable 'aaai21'",
+      "name": "Debug executable 'limeltl'",
       "cargo": {
-        "args": ["build", "--bin=aaai21", "--package=aaai21"],
+        "args": ["build", "--bin=limeltl", "--package=limeltl"],
         "filter": {
-          "name": "aaai21",
+          "name": "limeltl",
           "kind": "bin"
         }
       },
@@ -21,11 +21,11 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug unit tests in executable 'aaai21'",
+      "name": "Debug unit tests in executable 'limeltl'",
       "cargo": {
-        "args": ["test", "--no-run", "--bin=aaai21", "--package=aaai21"],
+        "args": ["test", "--no-run", "--bin=limeltl", "--package=limeltl"],
         "filter": {
-          "name": "aaai21",
+          "name": "limeltl",
           "kind": "bin"
         }
       },
