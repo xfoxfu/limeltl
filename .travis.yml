@@ -15,15 +15,11 @@ before_script:
   - cargo build --release --verbose
 before_deploy:
   - mv target/release/aaai21 "target/release/aaai21-$TRAVIS_TAG-$TRAVIS_OS_NAME"
-  - git config --local user.name "Travis CI"
-  - git config --local user.email "noreply@travis-ci.com"
-  - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
-  - git tag $TRAVIS_TAG
 deploy:
   - provider: releases
     skip_cleanup: true
+    draft: true
     "on":
-      tags: true
       condition: "$TRAVIS_RUST_VERSION = stable"
       branch: master
     file_glob: true
