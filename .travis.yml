@@ -1,0 +1,33 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+os:
+  - linux
+  - osx
+  - windows
+before_script:
+  - cargo build --release --verbose
+before_deploy:
+  - mv target/release/aaai21 "target/release/aaai21-$TRAVIS_TAG-$TRAVIS_OS_NAME"
+  - git config --local user.name "Travis CI"
+  - git config --local user.email "noreply@travis-ci.com"
+  - export TRAVIS_TAG=${TRAVIS_TAG:-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)}
+  - git tag $TRAVIS_TAG
+deploy:
+  - provider: releases
+    skip_cleanup: true
+    "on":
+      tags: true
+      condition: "$TRAVIS_RUST_VERSION = stable"
+      branch: master
+    file_glob: true
+    file:
+      - target/release/aaai21-*
+    api_key:
+      secure: "SE68mG8LRtKC4zonassJS92FQ0+Vi+8QagI/UG9EHKorb0Zy8AYLmXpZSgvKiC6oevO6oriNkeIDoYmRMFpUI0mca+4n8bYLcyaCni0NNmVXog6CKkAzUPtxqoP3EPaG7Z+8HqdVoOU1eykOz9OEss98Ebx+B2+exvv6ZB6u5OvnUQsfWkdtvbjkA76gm+URvZJCU2bQcGRhABKiHs5s+rryF6bZ51jI1B8mJVfVpXbwvwWcjf+DvYNdfTK9yZ/B/T/ETf0HUNLnSx4b56AfsZ4p7hnLZa3rQn9rC6UEorZL+Curn0l5vCv3ZebmCe0ifMLSzcWzayqCv5wCHtBR6nQmyIu+8xB4N6Xm7Gu4Tzx/Tf3AOhD/H67Od0FpwdZwSDzADcUAvNDHHUhlrlXEHAfypfAkPBJwTNVhqb5MpMUWuF7fQ3k/F0jtcrvmSGx7GuSH4u6Ph+b5Rd1M8JLsuITkrc+NfkzCTv8oQxljLsBZyO5gx+xw3SLYjlPzPzekHhxH6sbd1z87DCD8J3XxFDoGOcklU4JJsdL49gEKkOwsHUSw7eI4AfPSw4To9erJSipWrU2EpjdoBeLQ+xjwzGsuq3T2WUOS6s7+OT/bD/CtlDudOVWQXC71/c3/5hqvj3oEDUtlfZkSQ1+6aiWoJbDwzW/oD28MuOnUk7P5+1A="
