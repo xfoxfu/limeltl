@@ -82,6 +82,12 @@ fn main() {
         return;
     }
 
+    // 没有结果
+    if !result {
+        eprintln!("SAT 求解不可满足，max_n = {:?}", opts.size);
+        return;
+    }
+
     // 生成语法树
     let pos_vars: Vec<Variable> = vars
         .iter()
