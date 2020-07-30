@@ -27,7 +27,7 @@ pub struct Opts {
     // /// 生成 LTLf 公式（默认）
     // #[clap(short = "l", long = "ltl", group = "format")]
     // output_ltl: bool,
-    // 生成 Python 表达的元组
+    /// 生成 Python 表达的元组
     #[clap(short = "t", long = "tuple", group = "format")]
     pub fmt_tuple: bool,
     /// 指定生成 AFA 大小

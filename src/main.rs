@@ -22,7 +22,11 @@ fn main() {
     )
     .expect("无法解析 JSON");
     // 打开输出文件
-    let mut output = std::fs::File::create(opts.output).expect("无法打开输出文件");
+    let mut output: Box<dyn std::io::Write> = if opts.output != "-" {
+        Box::new(std::fs::File::create(opts.output).expect("无法打开输出文件"))
+    } else {
+        Box::new(std::io::stdout())
+    };
 
     // 解析输入
     let mut ctx: context::Context = input.into();
