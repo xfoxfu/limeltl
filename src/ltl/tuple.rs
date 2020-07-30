@@ -39,3 +39,22 @@ impl<'a> std::fmt::Display for TupleLtlNode<'a> {
         }
     }
 }
+
+#[cfg(test)]
+#[test]
+fn test() {
+    let ltl = LtlNode::And(
+        Box::new(LtlNode::Literal(true, "p".to_string())),
+        Box::new(LtlNode::Until(
+            Box::new(LtlNode::Literal(true, "q".to_string())),
+            Box::new(LtlNode::Next(Box::new(LtlNode::Literal(
+                false,
+                "r".to_string(),
+            )))),
+        )),
+    );
+    assert_eq!(
+        format!("{}", TupleLtlNode(&ltl)),
+        "('&', 'p', ('U', 'q', ('X', ('!', 'r'))))"
+    )
+}
