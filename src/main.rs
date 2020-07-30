@@ -95,6 +95,12 @@ fn main() {
         .map(|(v, _)| v.clone())
         .collect();
     let model = ltl::Model::new(&ctx, &pos_vars);
-    let ltl = ltl::make_ltl(&model, 0);
-    writeln!(output, "{}", ltl).expect("写入失败");
+    let ltl = model.make_ltl(0);
+
+    if !opts.fmt_tuple {
+        writeln!(output, "{}", ltl).expect("写入失败");
+        return;
+    }
+
+    writeln!(output, "{}", ltl::TupleLtlNode(&ltl)).expect("写入失败");
 }

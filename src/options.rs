@@ -24,12 +24,12 @@ pub struct Opts {
     /// 生成求解结果
     #[clap(short = "r", long = "result", group = "format")]
     pub fmt_res: bool,
-    // /// 生成 AFA 自动机
-    // #[clap(short = "a", long = "afa", group = "format")]
-    // pub fmt_afa: bool,
     // /// 生成 LTLf 公式（默认）
     // #[clap(short = "l", long = "ltl", group = "format")]
     // output_ltl: bool,
+    // 生成 Python 表达的元组
+    #[clap(short = "t", long = "tuple", group = "format")]
+    pub fmt_tuple: bool,
     /// 指定生成 AFA 大小
     #[clap(short = "n", long = "size", required = true)]
     pub size: usize,
