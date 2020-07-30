@@ -1,5 +1,6 @@
 import sys
 import subprocess
+import json
 
 
 def solve(exec_path, input_content, max_size=10, output=True):
@@ -9,20 +10,22 @@ def solve(exec_path, input_content, max_size=10, output=True):
     `max_size` - 求解 AFA 尺寸限制；
     `output` - 是否输出程序运行结果。
 
-    若有解，则返回元组，否则返回 `None`
+    若有解，则返回 `(字符串, 元组)`，否则返回 `None`
     """
     result = subprocess.run(
-        [exec_path, '-', '-', '-n', str(max_size), '-t'], input=input_content, encoding='utf-8', capture_output=True)
+        [exec_path, '-', '-', '-n', str(max_size), '-b'], input=json.dumps(input_content), encoding='utf-8',
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     if output:
         print(result.stderr)
 
     if result.returncode == 0:
-        return eval(result.stdout)
+        [s, t] = result.stdout.strip().split('\n')
+        return (s, eval(t))
     else:
         return None
 
 
 if __name__ == "__main__":
     print('求解结果', solve('target/release/limeltl',
-                        '{"vocab":["p","q","r"],"traces_pos":[[["p"],["p"],["q"]],[["p"],["q"]],[["p","r"],["q"]],[["q","r"]]],"traces_neg":[[["p"],["r"],["q"]],[["p"],["r"]],[["r"],["q"]]]}', 10))
+                        {"vocab": ["p", "q", "r"], "traces_pos": [[["p"], ["p"], ["q"]], [["p"], ["q"]], [["p", "r"], ["q"]], [["q", "r"]]], "traces_neg": [[["p"], ["r"], ["q"]], [["p"], ["r"]], [["r"], ["q"]]]}, 3, False))

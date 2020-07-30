@@ -30,6 +30,9 @@ pub struct Opts {
     /// 生成 Python 表达的元组
     #[clap(short = "t", long = "tuple", group = "format")]
     pub fmt_tuple: bool,
+    /// 同时生成 LTLf 和元组，每个一行
+    #[clap(short = "b", long = "both", group = "format")]
+    pub fmt_both: bool,
     /// 指定生成 AFA 大小
     #[clap(short = "n", long = "size", required = true)]
     pub size: usize,
@@ -37,6 +40,6 @@ pub struct Opts {
 
 impl Opts {
     pub fn fmt_ltl(&self) -> bool {
-        !self.fmt_expr && !self.fmt_cnf && !self.fmt_res && !self.fmt_tuple
+        !self.fmt_expr && !self.fmt_cnf && !self.fmt_res && !self.fmt_tuple && !self.fmt_both
     }
 }

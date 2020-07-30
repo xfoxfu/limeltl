@@ -82,11 +82,11 @@ fn solve_iter(ctx: &Context, opts: &Opts, output: &mut impl Write) -> Result<(),
     let model = ltl::Model::new(&ctx, &pos_vars);
     let ltl = model.make_ltl(0);
 
-    if opts.fmt_ltl() {
+    if opts.fmt_ltl() || opts.fmt_both {
         writeln!(output, "{}", ltl).expect("写入失败");
     }
 
-    if opts.fmt_tuple {
+    if opts.fmt_tuple || opts.fmt_both {
         writeln!(output, "{}", ltl::TupleLtlNode(&ltl)).expect("写入失败");
     }
 
