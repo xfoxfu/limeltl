@@ -34,3 +34,9 @@ pub struct Opts {
     #[clap(short = "n", long = "size", required = true)]
     pub size: usize,
 }
+
+impl Opts {
+    pub fn fmt_ltl(&self) -> bool {
+        !self.fmt_expr && !self.fmt_cnf && !self.fmt_res && !self.fmt_tuple
+    }
+}
