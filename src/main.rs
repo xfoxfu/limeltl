@@ -47,7 +47,7 @@ fn solve_iter(ctx: &Context, opts: &Opts, output: &mut impl Write) -> Result<(),
     if opts.fmt_res {
         writeln!(output, "n = {}, SAT = {}", ctx.max_skeletons(), result).expect("写入失败");
         for word in ctx.words() {
-            println!("word {} => {}", word.0, word.1);
+            writeln!(output, "word {} => {}", word.0, word.1).unwrap();
         }
         if result {
             for v in vars

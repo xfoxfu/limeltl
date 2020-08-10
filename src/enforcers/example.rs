@@ -53,14 +53,14 @@ fn make_rule(
         ],
         Variable::Next(s) => vec![
             (if t < e_max_t {
-                Run(e, t + 1, s)
+                Run(e, t + 1, s1)
             } else {
                 Exactly(false)
             }) << (Run(e, t, s) & get_maybe_dual(Next(s), ex) & LeftChild(s, s1)),
         ],
         Variable::WNext(s) => vec![
             (if t < e_max_t {
-                Run(e, t + 1, s)
+                Run(e, t + 1, s1)
             } else {
                 Exactly(true)
             }) << (Run(e, t, s) & get_maybe_dual(WNext(s), ex) & LeftChild(s, s1)),
