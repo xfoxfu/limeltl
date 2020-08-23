@@ -2,6 +2,7 @@ mod bool_logic;
 mod context;
 mod enforcers;
 mod ltl;
+// mod maple;
 mod options;
 mod sat;
 mod utils;
@@ -25,34 +26,38 @@ fn solve_iter(ctx: &Context, opts: &Opts, output: &mut impl Write) -> Result<(),
     }
 
     // 生成 CNF
-    let mut conv = sat::SATConverter::new();
+    let mut solver = minisat::Solver::new();
+    let mut conv = sat::SATConverter::new(&mut solver);
     for rule in rules.into_iter() {
         let rule_cnf = convert_cnf(rule);
         conv.add_clause(rule_cnf);
     }
-    let lit_pos = conv.get_var(&Variable::Exactly(true)).positive();
-    let lit_neg = conv.get_var(&Variable::Exactly(false)).negative();
-    let (vars, formula) = conv.finish();
+    let lit_pos = conv.get_var(&Variable::Exactly(true)).clone();
+    let lit_neg = !conv.get_var(&Variable::Exactly(false)).clone();
+    let vars = conv.finish();
 
     if opts.fmt_cnf {
-        varisat::dimacs::write_dimacs(output, &formula).expect("写入规则失败");
+        // minisat::dimacs::write_dimacs(output, &formula).expect("写入规则失败");
     }
 
     // 求解
-    let mut solver = varisat::Solver::new();
-    solver.add_formula(&formula);
-    solver.assume(&[lit_pos, lit_neg]);
-    let result = solver.solve().expect("无法进行求解");
+    let result = solver.solve_under_assumptions(vec![lit_pos, lit_neg]);
 
     if opts.fmt_res {
-        writeln!(output, "n = {}, SAT = {}", ctx.max_skeletons(), result).expect("写入失败");
+        writeln!(
+            output,
+            "n = {}, SAT = {}",
+            ctx.max_skeletons(),
+            result.is_ok()
+        )
+        .expect("写入失败");
         for word in ctx.words() {
             writeln!(output, "word {} => {}", word.0, word.1).unwrap();
         }
-        if result {
+        if let Ok(ref model) = result {
             for v in vars
                 .iter()
-                .filter(|(_, l)| solver.model().unwrap().contains(&l.positive()))
+                .filter(|(_, l)| model.value(l.clone()) == true)
                 .filter_map(|(v, _)| match v {
                     Variable::Run(_, _, _) => None,
                     Variable::Phantom(_) => None,
@@ -66,7 +71,7 @@ fn solve_iter(ctx: &Context, opts: &Opts, output: &mut impl Write) -> Result<(),
     }
 
     // 没有结果
-    if !result {
+    if !result.is_ok() {
         eprintln!("SAT 求解不可满足，n = {:?}", ctx.max_skeletons());
         return Err(());
     } else {
@@ -74,9 +79,10 @@ fn solve_iter(ctx: &Context, opts: &Opts, output: &mut impl Write) -> Result<(),
     }
 
     // 生成语法树
+    let model = result.unwrap();
     let pos_vars: Vec<Variable> = vars
         .iter()
-        .filter(|(_, l)| solver.model().unwrap().contains(&l.positive()))
+        .filter(|(_, l)| model.value(l.clone()) == true)
         .map(|(v, _)| v.clone())
         .collect();
     let model = ltl::Model::new(&ctx, &pos_vars);

@@ -2,13 +2,13 @@
 //
 // This example demonstrates clap's full 'custom derive' style of creating arguments which is the
 // simplest method of use, but sacrifices some flexibility.
-use clap::{ArgGroup, Clap};
+use clap::{crate_version, ArgGroup, Clap};
 
 /// 根据输入序列学习 LTL 公式
 ///
 /// 基于 https://aaai.org/ojs/index.php/ICAPS/article/view/3529
 #[derive(Clap, Debug)]
-#[clap(version = "1.0", author = "FU Yuze <i@xfox.me>")]
+#[clap(version = crate_version!(), author = "FU Yuze <i@xfox.me>")]
 #[clap(group = ArgGroup::new("format"))]
 pub struct Opts {
     /// 观察到的现象输入 JSON 文件名
