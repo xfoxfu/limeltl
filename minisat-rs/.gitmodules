@@ -1,3 +1,0 @@
-[submodule "lib/minisat"]
-	path = lib/minisat
-	url = https://github.com/agurfinkel/minisat.git
