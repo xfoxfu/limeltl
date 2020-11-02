@@ -2,7 +2,6 @@ mod bool_logic;
 mod context;
 mod enforcers;
 mod ltl;
-// mod maple;
 mod options;
 mod sat;
 mod utils;
@@ -26,7 +25,7 @@ fn solve_iter(ctx: &Context, opts: &Opts, output: &mut impl Write) -> Result<(),
     }
 
     // 生成 CNF
-    let mut solver = minisat::Solver::new();
+    let mut solver = maple::Solver::new();
     let mut conv = sat::SATConverter::new(&mut solver);
     for rule in rules.into_iter() {
         let rule_cnf = convert_cnf(rule);
@@ -37,7 +36,7 @@ fn solve_iter(ctx: &Context, opts: &Opts, output: &mut impl Write) -> Result<(),
     let vars = conv.finish();
 
     if opts.fmt_cnf {
-        // minisat::dimacs::write_dimacs(output, &formula).expect("写入规则失败");
+        // maple::dimacs::write_dimacs(output, &formula).expect("写入规则失败");
     }
 
     // 求解

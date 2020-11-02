@@ -1,0 +1,25 @@
+[package]
+name = "maple"
+version = "0.4.4"
+authors = ["Bjørnar Luteberget <luteberget@gmail.com>"]
+build = "./build.rs"
+description = "MiniSat Rust interface. Solves a boolean satisfiability problem given in conjunctive normal form."
+readme="README.md"
+documentation="https://docs.rs/minisat"
+repository="https://github.com/luteberget/minisat-rs/"
+categories=["api-bindings","science"]
+license="MIT"
+
+[dependencies]
+itertools = "0.8"
+
+[dev-dependencies]
+quickcheck="0.7"
+sudoku="0.7"
+
+[build-dependencies]
+cc="1"
+bindgen="0.42"
+
+[features]
+glucose = []

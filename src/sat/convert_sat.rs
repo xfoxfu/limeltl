@@ -1,7 +1,7 @@
 //! 将 CNF 形式的逻辑表达式转换为 SAT 求解器所需的格式
 
 use crate::bool_logic::{BinaryOp, PropExpr, UnaryOp, Variable};
-use minisat::{Bool, Solver};
+use maple::{Bool, Solver};
 use std::{collections::HashMap, ops::Not};
 
 #[derive(Debug)]
